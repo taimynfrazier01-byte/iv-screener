@@ -1,16 +1,60 @@
-# React + Vite
+# IV Screener
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Options IV screening tool — IV Rank, IV Percentile, HV30, IV/HV Ratio, Term Structure.
+Powered by Tradier live API. Deployed on Vercel.
 
-Currently, two official plugins are available:
+## Deploy to Vercel
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+1. Push this repo to GitHub
+2. Import repo in Vercel dashboard
+3. Add environment variable:
+   - `TRADIER_TOKEN` = your Tradier live account token
+4. Deploy — Vercel auto-detects Vite + serverless function
 
-## React Compiler
+## Local Development
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+npm install
+vercel dev        # runs both Vite frontend + serverless function locally
+```
 
-## Expanding the Oxlint configuration
+If you don't have Vercel CLI:
+```bash
+npm install -g vercel
+vercel login
+vercel dev
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+## Project Structure
+
+```
+iv-screener/
+├── api/
+│   └── iv.js          ← Vercel serverless function (Tradier calls happen here)
+├── src/
+│   ├── App.jsx        ← React frontend
+│   └── main.jsx       ← Entry point
+├── index.html
+├── package.json
+├── vite.config.js
+└── vercel.json
+```
+
+## How It Works
+
+- Frontend sends POST /api/iv with list of tickers
+- Serverless function calls Tradier API using TRADIER_TOKEN env var (never exposed to browser)
+- Computes IV Rank, IV Percentile, HV30, IV/HV Ratio, Term Structure
+- Returns results sorted by IV Rank (highest first)
+
+## IV Rank Interpretation
+
+- IVR ≥ 60: High IV — favorable for premium selling
+- IVR 35-59: Moderate IV — neutral
+- IVR < 35: Low IV — less favorable (current SPY/QQQ environment as of mid-2026)
+
+## Notes
+
+- IV Rank and IV Percentile are approximated using rolling 30-day HV scaled by 1.15x
+  (Tradier does not store historical options chain snapshots on standard plans)
+- For exact historical IV, Polygon Starter ($29/mo) provides full chain history
